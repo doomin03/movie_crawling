@@ -31,7 +31,7 @@ class youtube_select(object):
 
     def get_runing(self):
         try:
-            runing_time = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#time-status")))
+            runing_time = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#contents > ytd-video-renderer:nth-child(2) #time-status")))
             return runing_time.text.strip()
         except Exception as e:
             print(e)
@@ -39,14 +39,14 @@ class youtube_select(object):
         
     def enter_video(self): 
         try:   
-            first_video = self.wait.until(EC.element_to_be_clickable((By.ID, "video-title")))
+            first_video = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#contents > ytd-video-renderer:nth-child(2) #video-title")))
             first_video.click()
         except Exception as e:
             print(e)
         
     def get_title(self):
         try:
-            title = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#video-title > yt-formatted-string")))
+            title = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#contents > ytd-video-renderer:nth-child(2) #video-title > yt-formatted-string")))
             return title.text
         except Exception as e:
             print(e)
@@ -54,9 +54,10 @@ class youtube_select(object):
         
     def get_date(self):
         try:
-            button = self.wait.until(EC.element_to_be_clickable((By.ID, "bottom-row")))
+            button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#info-container")))
             button.click()
-            date = self.driver.find_element_by_css_selector("#info > span:nth-child(3)")
+            date = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#info > span:nth-child(3)")))
+            print(date.text)
             return date.text
         except Exception as e:
             print(e)
@@ -74,5 +75,5 @@ class youtube_select(object):
        
 path = r"C:\Users\HAMA\Desktop\crawling\chromedriver-win64\chromedriver.exe"
 test = youtube_select(path)
-print(test.search("[닥터 체크] 아무튼, 고지혈증 그것이 알고싶다! 고지혈증 한국건강관리협회 대구지부"))
-test.web_driver_close()
+print(test.search("이혼전문변호사가 알려주는 불륜증거 수집방법, 합법과 불법"))
+
