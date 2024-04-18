@@ -1,0 +1,43 @@
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=9;" />
+
+<title>교통카드 빅데이터</title>
+
+<link type="text/css" rel="stylesheet"	href="/css/cmmn/pubCommon.css" />
+<script type="text/javascript"	src="/js/cmmn/jquery-2.2.4.min.js"></script>
+<script type="text/javascript"	src="/js/cmmn/pubCommon.js"></script>
+
+</head>
+
+<body class="bgnone">
+
+	<div class="wrap_error">
+		<div class="error_container">
+			<p class="right">
+				<a href="#"><img src="/images/pub/logo.gif" alt="교통카드빅데이터 통합정보시스템" title="교통카드빅데이터 통합정보시스템" /></a>
+			</p>
+			<div class="error_box">
+				<img src="/images/pub/warning.png" alt="error" title="error" />
+			</div>
+			<div class="error_txt">
+				<p>요청한 페이지를 찾을 수 없습니다.</p>
+				<div class="text-center">
+					<button type="button" class="btn btn-white" onclick="javascript:window.history.back();">이전으로 돌아가기</button>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+
+</body>
+</html>

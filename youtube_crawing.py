@@ -8,7 +8,7 @@ class youtube_select(object):
     def __init__(self, driver_path, MAX_search=2):
         self.url = 'https://www.youtube.com'
         self.driver = webdriver.Chrome(driver_path)
-        self.wait = WebDriverWait(self.driver, 3)
+        self.wait = WebDriverWait(self.driver, 10)
         self.MAXX_SEARCH = MAX_search
         
             
@@ -34,11 +34,10 @@ class youtube_select(object):
             title = self.get_title(i)
             runing_time = self.get_runing(i)
             self.enter_video(i)
-            channel = self.get_channel()
             data = self.get_date()
             self.driver.back()
         
-            new_data = {'title': title, 'channel': channel, 'runing_time': runing_time, 'data': data}
+            new_data = {'title': title,  'runing_time': runing_time, 'data': data}
             similarity_score = self.calculate_similarity(input_title, new_data)
         
             if similarity_score > self.highest_similarity:
@@ -56,9 +55,9 @@ class youtube_select(object):
         return matching_ratio
 
     def get_runing(self, num):
-        try:#                                                                                                                    
-            runing_time = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='contents']/ytd-video-renderer[%d] //*[@id='time-status']"%num)))
-            return runing_time.text.strip()
+        try:                                                                                                               
+            runing_time = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='contents']/ytd-video-renderer[%d] //*[@id='time-status'] //*[@id='text']"%num)))
+            return runing_time.text
         except Exception as e:
             print("영상 길이 크롤링 실패")
             return None
@@ -78,15 +77,7 @@ class youtube_select(object):
         except Exception as e:
             print("제목 크롤링 실패")
             return None
-        
-    def get_channel(self):
-        try:
-            channel = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#upload-info > #channel-name")))
-            return channel.text
-        except Exception as e:
-            print("채널 크롤링 실패")
-            return None
-        
+    
     def get_date(self):
         try:
             button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#description-inner")))
