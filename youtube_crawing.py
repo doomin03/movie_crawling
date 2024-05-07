@@ -1,17 +1,49 @@
 from difflib import SequenceMatcher
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support import expected_conditions as EC
 
 class youtube_select(object):
-    def __init__(self, driver_path, MAX_search=2):
+
+
+    def __init__(self, MAX_search=2):
         self.url = 'https://www.youtube.com'
-        self.driver = webdriver.Chrome(driver_path)
-        self.wait = WebDriverWait(self.driver, 10)
-        self.MAXX_SEARCH = MAX_search
+        chrome_options  = Options()
+        chrome_options.add_argument("--headless")
+    
+        # 브라우저 설정 최적화
+        chrome_options.add_argument("--no-sandbox")  # 샌드박스 비활성화
+        chrome_options.add_argument("--disable-gpu")  # GPU 사용 비활성화
+        chrome_options.add_argument("--window-size=1280x1696")  # 창 크기 설정
+        chrome_options.add_argument("--blink-settings=imagesEnabled=false")  # 이미지 로드 비활성화
+        # DesiredCapabilities 설정
+        capabilities = DesiredCapabilities.CHROME.copy()
+        capabilities['pageLoadStrategy'] = 'eager'
+
+        # 사용자 에이전트 설정 (크롤링 탐지 회피)
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+
+        # Chrome 프로세스 최적화
+        chrome_options.add_argument("single-process")  # 단일 프로세스 모드
+        chrome_options.add_argument("--disable-dev-shm-usage")  # 공유 메모리 사용 비활성화
+        chrome_options.add_argument("--disable-dev-tools")  # 개발자 도구 비활성화
+        chrome_options.add_argument("--no-zygote")  # Zygote 비활성
+
+        # 로깅 비활성화 및 자동화 탐지 회피
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+        chrome_options.add_experimental_option("detach", True)
         
-            
+        self.driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options, desired_capabilities=capabilities )
+        self.wait = WebDriverWait(self.driver, 10)
+        self.MAX_SEARCH = MAX_search
+  
+
     def search(self, input_title):
         self.highest_similarity = 0
         most_similar_data = None
@@ -23,16 +55,18 @@ class youtube_select(object):
         
         #//*[@id="chips"]/yt-chip-cloud-chip-renderer[3]
         try:
-            element = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='chips']/yt-chip-cloud-chip-renderer[3]")))
-
-            # 요소 클릭
-            element.click()
+            video_list_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='chips']/yt-chip-cloud-chip-renderer[3]")))
+            video_list_button.click()
         except Exception as e:
             print(e)
         
-        for i in range(1, self.MAXX_SEARCH + 1):
-            title = self.get_title(i)
+        for i in range(1, self.MAX_SEARCH + 1):
+        
             runing_time = self.get_runing(i)
+            if runing_time == 'SHORTS':
+                print("shorts video skip")
+                continue
+            title = self.get_title(i)
             self.enter_video(i)
             data = self.get_date()
             self.driver.back()
@@ -45,7 +79,6 @@ class youtube_select(object):
                 most_similar_data = new_data
         
 
-        self.web_driver_close()
         self.driver.quit()
         return most_similar_data
 
@@ -55,13 +88,14 @@ class youtube_select(object):
         return matching_ratio
 
     def get_runing(self, num):
-        try:                                                                                                               
-            runing_time = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='contents']/ytd-video-renderer[%d] //*[@id='time-status'] //*[@id='text']"%num)))
+        try:
+            runing_time = WebDriverWait(self.driver, 15).until(
+                EC.visibility_of_element_located((By.XPATH, "//*[@id='contents']/ytd-video-renderer[%d]  //*[@id='overlays']/ytd-thumbnail-overlay-time-status-renderer/div[1]/badge-shape //*[@id='text']"%num))
+            )
             return runing_time.text
         except Exception as e:
-            print("영상 길이 크롤링 실패")
-            return None
-        
+            print(f"영상 길이 크롤링 실패: {e}")
+        return None
     def enter_video(self, num): 
         try:   
             first_video = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='contents']/ytd-video-renderer[%d] //*[@id='video-title']"%num)))
@@ -73,7 +107,7 @@ class youtube_select(object):
     def get_title(self, num):
         try:
             title = self.wait.until(EC.visibility_of_element_located((By.XPATH,"//*[@id='contents']/ytd-video-renderer[%d]  //*[@id='video-title']/yt-formatted-string"%num)))
-            return title.text
+            return title.text.strip() 
         except Exception as e:
             print("제목 크롤링 실패")
             return None
@@ -84,7 +118,7 @@ class youtube_select(object):
             button.click()
             date = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#info > span:nth-child(3)")))
             
-            return date.text
+            return date.text.strip() 
         except Exception as e:
             # button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#description-inner")))
             # button.click()
@@ -142,6 +176,3 @@ class youtube_select(object):
         # SequenceMatcher를 사용하여 두 문자열 간의 일치하는 부분의 비율 계산
         matcher = SequenceMatcher(None, s1, s2)
         return matcher.ratio()  
-    
-    def web_driver_close(self):
-        self.driver.close()
